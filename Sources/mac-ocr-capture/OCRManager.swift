@@ -11,46 +11,41 @@ struct OCRManager: OCRManagerProtocol {
             throw NSError(domain: "OCRManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "File not found at \(url.path)"])
         }
         
-        return try await withCheckedThrowingContinuation { continuation in
-            let request = VNRecognizeTextRequest { (request, error) in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                
-                guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                    continuation.resume(returning: "")
-                    return
-                }
-                
-                // Sort observations by bounding box top-to-bottom, then left-to-right
-                let sortedObservations = observations.sorted { (obs1, obs2) -> Bool in
-                    let box1 = obs1.boundingBox
-                    let box2 = obs2.boundingBox
-                    if abs(box1.origin.y - box2.origin.y) < 0.05 {
-                        return box1.origin.x < box2.origin.x
-                    }
-                    return box1.origin.y > box2.origin.y
-                }
-                
-                let recognizedStrings = sortedObservations.compactMap { observation in
-                    observation.topCandidates(1).first?.string
-                }
-                
-                let joinedText = recognizedStrings.joined(separator: "\n")
-                continuation.resume(returning: joinedText)
-            }
-            
+        return try await Task.detached(priority: .userInitiated) {
+            let request = VNRecognizeTextRequest()
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             
             let handler = VNImageRequestHandler(url: url, options: [:])
+            try handler.perform([request])
             
-            do {
-                try handler.perform([request])
-            } catch {
-                continuation.resume(throwing: error)
+            guard let observations = request.results else {
+                return ""
             }
-        }
+            
+            // Group observations into rows to preserve strict weak ordering
+            let sortedByY = observations.sorted { $0.boundingBox.origin.y > $1.boundingBox.origin.y }
+            var rows: [[VNRecognizedTextObservation]] = []
+            for obs in sortedByY {
+                if var lastRow = rows.last,
+                   let representative = lastRow.first,
+                   abs(representative.boundingBox.origin.y - obs.boundingBox.origin.y) < 0.05 {
+                    lastRow.append(obs)
+                    rows[rows.count - 1] = lastRow
+                } else {
+                    rows.append([obs])
+                }
+            }
+            
+            let sortedObservations = rows.flatMap { row in
+                row.sorted { $0.boundingBox.origin.x < $1.boundingBox.origin.x }
+            }
+            
+            let recognizedStrings = sortedObservations.compactMap { observation in
+                observation.topCandidates(1).first?.string
+            }
+            
+            return recognizedStrings.joined(separator: "\n")
+        }.value
     }
 }

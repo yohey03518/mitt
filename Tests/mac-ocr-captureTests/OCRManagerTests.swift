@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 @Suite struct OCRManagerTests {
     @Test func testOCROnGeneratedImage() async throws {
         let textToRender = "HELLO OCR"
-        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_ocr_render.png")
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_ocr_render_\(UUID().uuidString).png")
         
         // Generate a PNG image with text
         let size = CGSize(width: 400, height: 100)
