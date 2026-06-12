@@ -33,4 +33,21 @@ import Foundation
         // (since headless CI environments might return false or exit with non-zero)
         _ = manager.sendNotification(title: "Test Title", message: "Test Message Content")
     }
+
+    @Test func testNotificationConfiguresProcessCorrectly() throws {
+        var ranURL: URL?
+        var ranArguments: [String]?
+        
+        let manager = NotificationManager { url, args in
+            ranURL = url
+            ranArguments = args
+            return (0, Data()) // Mock successful execution
+        }
+        
+        let success = manager.sendNotification(title: "MyTitle", message: "MyMsg")
+        
+        #expect(success)
+        #expect(ranURL?.path == "/usr/bin/osascript")
+        #expect(ranArguments == ["-e", "display notification \"MyMsg\" with title \"MyTitle\""])
+    }
 }

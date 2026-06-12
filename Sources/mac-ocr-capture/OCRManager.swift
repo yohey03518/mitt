@@ -29,7 +29,7 @@ struct OCRManager: OCRManagerProtocol {
             for obs in sortedByY {
                 if var lastRow = rows.last,
                    let representative = lastRow.first,
-                   abs(representative.boundingBox.origin.y - obs.boundingBox.origin.y) < 0.05 {
+                   abs(representative.boundingBox.origin.y - obs.boundingBox.origin.y) < (representative.boundingBox.height * 0.6) {
                     lastRow.append(obs)
                     rows[rows.count - 1] = lastRow
                 } else {

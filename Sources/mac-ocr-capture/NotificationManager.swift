@@ -5,6 +5,22 @@ protocol NotificationManagerProtocol {
 }
 
 struct NotificationManager: NotificationManagerProtocol {
+    private let runProcess: (URL, [String]) throws -> (Int32, Data)
+
+    init(runProcess: @escaping (URL, [String]) throws -> (Int32, Data) = { url, args in
+        let process = Process()
+        process.executableURL = url
+        process.arguments = args
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+        try process.run()
+        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        return (process.terminationStatus, errorData)
+    }) {
+        self.runProcess = runProcess
+    }
+
     private func escapeForAppleScript(_ input: String) -> String {
         return input
             .replacingOccurrences(of: "\\", with: "\\\\")
@@ -22,21 +38,12 @@ struct NotificationManager: NotificationManagerProtocol {
 
     func sendNotification(title: String, message: String) -> Bool {
         let script = makeScript(title: title, message: message)
-        
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-        
-        let errorPipe = Pipe()
-        process.standardError = errorPipe
+        let executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
         
         do {
-            try process.run()
+            let (terminationStatus, errorData) = try runProcess(executableURL, ["-e", script])
             
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            process.waitUntilExit()
-            
-            let success = process.terminationStatus == 0
+            let success = terminationStatus == 0
             if !success {
                 if let errorMessage = String(data: errorData, encoding: .utf8), !errorMessage.isEmpty {
                     print("osascript error: \(errorMessage.trimmingCharacters(in: .whitespacesAndNewlines))")
