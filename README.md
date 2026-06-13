@@ -24,6 +24,20 @@ A lightweight, zero-dependency command line utility that captures a region of th
    sudo cp .build/release/mac-ocr-capture /usr/local/bin/mac-ocr-capture
    ```
 
+## Language Configuration
+
+By default, the tool performs OCR using macOS's default detection (system preferred languages). To specify custom target languages, pass them in a comma-separated format using the `--lang` or `-l` flags:
+
+```bash
+# OCR using English and Simplified Chinese
+mac-ocr-capture --lang en-US,zh-Hans
+
+# OCR using Japanese
+mac-ocr-capture -l ja-JP
+```
+
+Language codes should follow the BCP 47 standard (e.g., `en-US`, `zh-Hans`, `ja-JP`, `es-ES`).
+
 ## How to Configure keyboard shortcut (macOS Shortcuts App)
 
 To trigger the OCR capture tool using a keyboard shortcut:
