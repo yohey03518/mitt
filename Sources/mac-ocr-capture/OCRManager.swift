@@ -2,11 +2,11 @@ import Foundation
 import Vision
 
 protocol OCRManagerProtocol {
-    func recognizeText(fromImageAt url: URL) async throws -> String
+    func recognizeText(fromImageAt url: URL, languages: [String]) async throws -> String
 }
 
 struct OCRManager: OCRManagerProtocol {
-    func recognizeText(fromImageAt url: URL) async throws -> String {
+    func recognizeText(fromImageAt url: URL, languages: [String] = []) async throws -> String {
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw NSError(domain: "OCRManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "File not found at \(url.path)"])
         }
@@ -16,8 +16,14 @@ struct OCRManager: OCRManagerProtocol {
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             
+            if !languages.isEmpty {
+                request.recognitionLanguages = languages
+            }
+            
             let handler = VNImageRequestHandler(url: url, options: [:])
             try handler.perform([request])
+
+
             
             guard let observations = request.results else {
                 return ""

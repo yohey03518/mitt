@@ -64,8 +64,59 @@ import UniformTypeIdentifiers
 
         // Test OCR on the saved file
         let manager = OCRManager()
-        let text = try await manager.recognizeText(fromImageAt: tempURL)
+        let text = try await manager.recognizeText(fromImageAt: tempURL, languages: [])
         
         #expect(text.contains(textToRender), "OCR output '\(text)' should contain rendered string '\(textToRender)'")
     }
+
+    @Test func testOCRWithSpecificLanguages() async throws {
+        let textToRender = "HELLO LANGUAGE TEST"
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_ocr_lang_\(UUID().uuidString).png")
+        
+        // Draw image
+        let size = CGSize(width: 400, height: 100)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            Issue.record("Failed to create CGContext")
+            return
+        }
+        context.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
+        context.fill(CGRect(origin: .zero, size: size))
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 32, weight: .bold),
+            .foregroundColor: NSColor.black,
+            .paragraphStyle: paragraphStyle
+        ]
+        let attributedString = NSAttributedString(string: textToRender, attributes: attributes)
+        
+        NSGraphicsContext.saveGraphicsState()
+        let nsContext = NSGraphicsContext(cgContext: context, flipped: false)
+        NSGraphicsContext.current = nsContext
+        attributedString.draw(in: CGRect(x: 0, y: 30, width: size.width, height: size.height - 30))
+        NSGraphicsContext.restoreGraphicsState()
+        
+        guard let cgImage = context.makeImage(),
+              let destination = CGImageDestinationCreateWithURL(tempURL as CFURL, UTType.png.identifier as CFString, 1, nil) else {
+            Issue.record("Failed to make image/destination")
+            return
+        }
+        CGImageDestinationAddImage(destination, cgImage, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            Issue.record("Failed to finalize image destination")
+            return
+        }
+        
+        defer {
+            try? FileManager.default.removeItem(at: tempURL)
+        }
+
+        let manager = OCRManager()
+        // We pass specific languages to the new API signature
+        let text = try await manager.recognizeText(fromImageAt: tempURL, languages: ["en-US"])
+        #expect(text.contains("HELLO"))
+    }
 }
+
