@@ -60,6 +60,11 @@ Language codes should follow the BCP 47 standard. Supported languages in macOS V
 
 *Note: Indonesian (`id-ID`) is not natively supported by macOS Vision's OCR framework. If passed, the system will fall back to using default/English detection.*
 
+> [!TIP]
+> **Language Ordering Matters:** The Vision framework processes the languages in the order they are provided. If you put `en-US` first (e.g., `--lang en-US,zh-Hant`), it may fail to recognize Chinese characters. Always put the more complex script first (e.g., `--lang zh-Hant,en-US`).
+> Also, the Chinese model (`zh-Hant`) natively recognizes Latin/English characters by default, so specifying `--lang zh-Hant` alone is usually sufficient for mixed Chinese-English text.
+
+
 
 ## How to Configure keyboard shortcut (macOS Shortcuts App)
 
