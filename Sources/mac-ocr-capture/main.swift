@@ -27,7 +27,8 @@ func main() async -> Int32 {
         }
         
         print("Performing OCR...")
-        let recognizedText = try await ocrManager.recognizeText(fromImageAt: tempFileURL)
+        let languages = LanguageParser.parseLanguages(from: CommandLine.arguments)
+        let recognizedText = try await ocrManager.recognizeText(fromImageAt: tempFileURL, languages: languages)
         
         let trimmedText = recognizedText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedText.isEmpty {
