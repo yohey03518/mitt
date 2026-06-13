@@ -36,7 +36,30 @@ mac-ocr-capture --lang en-US,zh-Hans
 mac-ocr-capture -l ja-JP
 ```
 
-Language codes should follow the BCP 47 standard (e.g., `en-US`, `zh-Hans`, `ja-JP`, `es-ES`).
+Language codes should follow the BCP 47 standard. Supported languages in macOS Vision include:
+
+| Language | Code |
+| :--- | :--- |
+| **Traditional Chinese** | `zh-Hant` |
+| **Simplified Chinese** | `zh-Hans` |
+| **Traditional Cantonese** | `yue-Hant` |
+| **Simplified Cantonese** | `yue-Hans` |
+| **English (US)** | `en-US` |
+| **Japanese** | `ja-JP` |
+| **Korean** | `ko-KR` |
+| **Vietnamese** | `vi-VT` |
+| **Spanish** | `es-ES` |
+| **French** | `fr-FR` |
+| **German** | `de-DE` |
+| **Italian** | `it-IT` |
+| **Portuguese (Brazil)** | `pt-BR` |
+| **Russian** | `ru-RU` |
+| **Ukrainian** | `uk-UA` |
+| **Thai** | `th-TH` |
+| **Arabic** | `ar-SA` or `ars-SA` |
+
+*Note: Indonesian (`id-ID`) is not natively supported by macOS Vision's OCR framework. If passed, the system will fall back to using default/English detection.*
+
 
 ## How to Configure keyboard shortcut (macOS Shortcuts App)
 
