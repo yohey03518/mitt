@@ -30,10 +30,8 @@ By default, the tool performs OCR using macOS's default detection (system prefer
 
 ```bash
 # OCR using English and Simplified Chinese
-mac-ocr-capture --lang en-US,zh-Hans
-
-# OCR using Japanese
-mac-ocr-capture -l ja-JP
+# Always put the more complex languagge first
+mac-ocr-capture --lang zh-Hans,en-US
 ```
 
 Language codes should follow the BCP 47 standard. Supported languages in macOS Vision include:
